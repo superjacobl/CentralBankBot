@@ -1,5 +1,6 @@
 import time,random,string,copy,api,svapi
 from cryptography.fernet import Fernet
+import os
 
 
 class bond:
@@ -30,7 +31,7 @@ class bond:
     if takefromaccount:
         if self.issued >= self.limit:
           return [False,"due to no more bonds of this type issued!"]
-        reponse = svapi.sendtransaction_ouath(self.base,self.holdersvid,"6287e68e-6396-437a-9d66-9635732684ad",f"Bought%20bond%20from%20Central%20Bank",user.oauthkey)
+        reponse = svapi.sendtransaction_ouath(self.base,self.holdersvid,os.getenv("Issuer-SVID"),f"Bought%20bond%20from%20Central%20Bank",user.oauthkey)
         print(reponse)
         if reponse["succeeded"]:
           user.bonds[self.id] = self.copy()
@@ -53,12 +54,12 @@ class bond:
     day = 60*60*24
     week = day*7
     if self.timeissued+(day*self.maturityday) <= time.time():
-      svapi.sendtransaction(self.base,"6287e68e-6396-437a-9d66-9635732684ad",self.holdersvid)
+      svapi.sendtransaction(self.base,os.getenv("Issuer-SVID"),self.holdersvid)
       self.maturited = True
       self.issued -= 1
       return self.base
     if self.lastupdated+(day*7) <= time.time() or force:
-        svapi.sendtransaction(self.base*(self.interest/4),"6287e68e-6396-437a-9d66-9635732684ad",self.holdersvid)
+        svapi.sendtransaction(self.base*(self.interest/4),os.getenv("Issuer-SVID"),self.holdersvid)
         self.lastupdated = time.time()
     return 0
 class account:
