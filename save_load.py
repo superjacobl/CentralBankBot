@@ -68,7 +68,10 @@ def load():
   except:
     return {}
   for item in data:
-    prev = int(item)
+    try:
+      prev = int(item)
+    except:
+      prev = item
     item = data[item]
     u = account()
     u.svid = item['svid']
