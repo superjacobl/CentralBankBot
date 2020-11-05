@@ -347,7 +347,8 @@ def updatebonds(accounts):
       for bond in item.bonds:
         bond = item.bonds[bond]
         total += bond.update()
-      svapi.sendtransaction(total,os.getenv("Issuer-SVID"),item.svid)
+      if not total == 0:
+        svapi.sendtransaction(total,os.getenv("Issuer-SVID"),item.svid)
   except:
     pass
 functions.RepeatedTimer(5,updatebonds,accounts)
