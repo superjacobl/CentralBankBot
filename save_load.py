@@ -47,6 +47,7 @@ def save(accounts):
       tem['id'] = b.id
       tem['bond_class'] = b.bond_class
       tem['issued'] = b.issued
+      tem['paid_out'] = b.paid_out
       bo[bond_id] = tem
     t['bonds'] = bo
     pp[prev] = t
@@ -83,6 +84,8 @@ def load():
       bo.maturityday = b['maturityday']
       bo.maturited = b['maturited']
       bo.lastupdated = b['lastupdated']
+      if "paid_out" in b:
+        bo.paid_out = b['paid_out']
       if "bond_class" in b:
         bo.bond_class = b['bond_class']
       if "issued" in b:

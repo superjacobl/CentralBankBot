@@ -23,6 +23,7 @@ class bond:
     self.bond_class = ""
     self.limit = 0
     self.issued = 0
+    self.paid_out = 0
   def buy(self,accounts,holdersvid,takefromaccount=False,user=None):
     self.holdersvid = holdersvid
     self.timeissued = time.time()
@@ -31,7 +32,7 @@ class bond:
     if takefromaccount:
         if self.issued >= self.limit:
           return [False,"due to no more bonds of this type issued!"]
-        reponse = svapi.sendtransaction_ouath(self.base,self.holdersvid,os.getenv("Issuer-SVID"),f"Bought%20bond%20from%20Central%20Bank",user.oauthkey)
+        reponse = svapi.sendtransaction_ouath(self.base,self.holdersvid,os.getenv("Issuer-SVID"),f"Bought%20bond",user.oauthkey)
         print(reponse)
         if reponse["succeeded"]:
           user.bonds[self.id] = self.copy()
