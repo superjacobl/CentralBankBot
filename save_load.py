@@ -4,6 +4,14 @@ from classes import *
 import requests,svapi,os,pickle
 from dotenv import load_dotenv
 from cryptography.fernet import Fernet
+IsHostedOnReplit = os.getenv("IsHostedOnReplit")
+if IsHostedOnReplit == "True":
+  IsHostedOnReplit = True
+else:
+  IsHostedOnReplit = False
+if IsHostedOnReplit:
+  from replit import db
+print(Fernet.generate_key())
 load_dotenv()
 def get_html(link):
   try:
@@ -42,14 +50,20 @@ def save(accounts):
       bo[bond_id] = tem
     t['bonds'] = bo
     pp[prev] = t
-  file = open('accounts.txt', 'wb') 
-  pickle.dump(pp, file)
-  file.close()
+  if IsHostedOnReplit:
+    db["accountdata"] = json.dumps(pp)
+  else:
+    file = open('accounts.txt', 'wb') 
+    pickle.dump(pp, file)
+    file.close()
 def load():
   accounts = {}
   try:
-    filehandler = open('accounts.txt', 'rb') 
-    data = pickle.load(filehandler)
+    if IsHostedOnReplit:
+      data = json.loads(db["accountdata"])
+    else:
+      filehandler = open('accounts.txt', 'rb') 
+      data = pickle.load(filehandler)
   except:
     return {}
   for item in data:

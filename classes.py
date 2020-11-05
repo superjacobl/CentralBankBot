@@ -53,15 +53,18 @@ class bond:
   def update(self,force=False):
     day = 60*60*24
     week = day*7
+    hour = 60*60
+    amountpaid = 0
     if self.timeissued+(day*self.maturityday) <= time.time():
       svapi.sendtransaction(self.base,os.getenv("Issuer-SVID"),self.holdersvid)
       self.maturited = True
       self.issued -= 1
       return self.base
-    if self.lastupdated+(day*7) <= time.time() or force:
-        svapi.sendtransaction(self.base*(self.interest/4),os.getenv("Issuer-SVID"),self.holdersvid)
+    if self.lastupdated+(hour) <= time.time() or force:
+        amountpaid += self.base*(self.interest/30/24)
         self.lastupdated = time.time()
-    return 0
+        self.paid_out += self.base*(self.interest/30/24)
+    return amountpaid
 class account:
     def __init__(self):
         self.loans = []

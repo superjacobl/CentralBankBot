@@ -133,11 +133,11 @@ async def on_message(message):
           if accounts[author.id].svid == "":
             accounts[author.id].svid = svapi.get_user_svid_from_discordid(author.id)
           if accounts[author.id].oauthkey == "":
-            await send_dm(author,f"{os.getenv('baseur')}/login")
+            await send_dm(author,f"{os.getenv('baseurl')}/login")
             await message.channel.send("Please click the link i just send you")
             return None
           if subcommand == "test":
-            await send_dm(author,f"{os.getenv('baseur')}/login")
+            await send_dm(author,f"{os.getenv('baseurl')}/login")
             await message.channel.send("Please click the link i just send you")
           if subcommand == "buy":
             if len(args) < 3:
@@ -172,12 +172,25 @@ async def on_message(message):
             await message.channel.send(f"Bought {amount} bonds at {round(bond.interest*100,2)}% yield per month for {int(bond.maturityday/30)} months!")
           
           if subcommand == "info":
-            embed = discord.Embed(title="Your Bonds",description="", color=0x00ee00)
+            embed = discord.Embed(title="Bonds",description="", color=0x00ee00)
             worth = 0
             payment = 0
             maturity = 0
-            for b in accounts[author.id].bonds:
-              b = accounts[author.id].bonds[b]
+            if len(args) > 2:
+              s = " "
+              name = s.join(args[2:len(args)])
+              svid = svapi.get_group_svid_from_name(name)
+              if svid == "Error":
+                await message.channel.send("Could not find group!")
+                return None
+              if svid in accounts:
+                account = accounts[svid]
+              else:
+                await message.channel.send("Group does not have a Account!")
+            else:
+              account = accounts[author.id]
+            for b in account.bonds:
+              b = account.bonds[b]
               worth += b.base+(b.base*b.interest*(b.timetillmaturity()/30))
               payment += b.base*b.interest
               if b.timetillmaturity() <= 14:
@@ -185,7 +198,7 @@ async def on_message(message):
             info = f"Total worth: ¢{round(worth,2)}"+"\n"
             info += f"Yield payments this week: ¢{round(payment/4,2)}"+"\n"
             info += f"Bonds that will reach maturity in the next 14 days: {maturity}"+"\n"
-            embed.add_field(name=f"Your bond info", value=info, inline=False)
+            embed.add_field(name=f"bond info", value=info, inline=False)
             await message.channel.send(embed=embed)
           if subcommand == "types":
             embed = discord.Embed(title="Bonds Types",description="", color=0x00ee00)
@@ -199,20 +212,54 @@ async def on_message(message):
             await message.channel.send(embed=embed)
         
           if subcommand == "give":
-            if len(args) < 4:
-               await message.channel.send("Please do /bond give @user id1,id2,id3,..")
+            if len(args) < 5:
+               await message.channel.send("Please do /bond give [type] [amount] or /bond give [type] [amount] [group]")
                return None
             bonds = accounts[author.id].bonds.copy()
-            ids = args[3].split(",")
-            touser = accounts[message.mentions[0].id]
-            total = 0
-            for item in ids:
-              if item in bonds:
-                touser.bonds[item] = bonds[item]
-                del accounts[author.id].bonds[item]
-                total += 1
-            username = str(message.mentions[0]).split("#")[0]
-            await message.channel.send(f"Gave {total} bonds to {username}")
+            bond_type = args[2]
+            if len(message.mentions) == 0:
+              s = " "
+              name = s.join(args[4:len(args)])
+              svid = svapi.get_group_svid_from_name(name)
+              if svid == "Error":
+                await message.channel.send("Could not find group!")
+                return None
+              if svid in accounts:
+                touser = accounts[svid]
+              else:
+                accounts[svid] = classes.account()
+                accounts[svid].svid = svid
+                touser = accounts[svid]
+            else:
+              touser = accounts[message.mentions[0].id]
+              name = message.mentions[0].name
+            amount = int(args[3])
+            #Bond Class Name: Int: Count of Bonds
+            types = {}
+            for item in bonds:
+              item = bonds[item]
+              if item.bond_class in types:
+                types[item.bond_class] += 1
+              else:
+                types[item.bond_class] = 1
+            if not bond_type in types:
+              await message.channel.send(f"You do not own enough bonds to give {amount} bonds to {name}!")
+              return None
+            if types[bond_type] >= amount:
+              total = 0
+              for item in bonds:
+                bondid = item
+                b = bonds[item]
+                if b.bond_class == bond_type:
+                  touser.bonds[bondid] = b
+                  del accounts[author.id].bonds[bondid]
+                  total += 1
+                  if total >= amount:
+                    break
+            else:
+              await message.channel.send(f"You do not own enough bonds to give {amount} bonds to {name}!")
+              return None
+            await message.channel.send(f"Gave {amount} bonds to {name}")
           if subcommand == "list":
             embed = discord.Embed(title=f"List of Bonds you own",description="", color=0x00ee00)
             if len(args) < 3:
@@ -296,9 +343,11 @@ def updatebonds(accounts):
   try:
     for item in accounts:
       item = accounts[item]
+      total = 0
       for bond in item.bonds:
         bond = item.bonds[bond]
-        total_bond_worth_issued -= bond.update()
+        total += bond.update()
+      svapi.sendtransaction(total,os.getenv("Issuer-SVID"),item.svid)
   except:
     pass
 functions.RepeatedTimer(5,updatebonds,accounts)
