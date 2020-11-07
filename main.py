@@ -187,6 +187,7 @@ async def on_message(message):
                 account = accounts[svid]
               else:
                 await message.channel.send("Group does not have a Account!")
+                return None
             else:
               account = accounts[author.id]
             for b in account.bonds:
@@ -210,10 +211,39 @@ async def on_message(message):
               info += f"Bonds bought/ Limit: {item.issued}/{item.limit}"+"\n"
               embed.add_field(name=f"{item.bond_class}", value=info, inline=False)
             await message.channel.send(embed=embed)
-        
+
+          if subcommand == "admingive":
+            if len(args) < 5:
+               await message.channel.send("Please do /bond admingive [type] [amount] or /bond give [type] [amount] [group]")
+               return None
+            bonds = accounts[author.id].bonds.copy()
+            bond_type = args[2]
+            if len(message.mentions) == 0:
+              s = " "
+              name = s.join(args[4:len(args)])
+              svid = svapi.get_group_svid_from_name(name)
+              if svid == "Error":
+                await message.channel.send("Could not find group!")
+                return None
+              if svid in accounts:
+                touser = accounts[svid]
+              else:
+                accounts[svid] = classes.account()
+                accounts[svid].svid = svid
+                touser = accounts[svid]
+            else:
+              touser = accounts[message.mentions[0].id]
+              name = message.mentions[0].name
+            amount = int(args[3])
+            #Bond Class Name: Int: Count of Bonds
+            total = 0
+            for i in range(0,amount):
+              bond = bond_types[bond_type]
+              b = bond.buy(accounts,touser.svid,False,touser)
+            await message.channel.send(f"Gave {amount} bonds to {name}")
           if subcommand == "give":
             if len(args) < 5:
-               await message.channel.send("Please do /bond give [type] [amount] or /bond give [type] [amount] [group]")
+               await message.channel.send("Please do /bond give [type] [amount] @user or /bond give [type] [amount] [group]")
                return None
             bonds = accounts[author.id].bonds.copy()
             bond_type = args[2]

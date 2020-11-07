@@ -62,7 +62,7 @@ def get_html_fast(link):
 
 def sendtransaction(amount,fromsvid,to,detail=None):
   if detail == None: 
-    detail = f"Bond%20payment%20from%20Central%20Bank"
+    detail = f"Bond%20payment"
   auth = os.getenv("auth")
   url = f"https://spookvooper.com/api/eco/SendTransactionByIDs?from={fromsvid}&to={to}&amount={amount}&auth={auth}&detail={detail}"
   threading.Thread(target=get_html_fast, args=(url,)).start()

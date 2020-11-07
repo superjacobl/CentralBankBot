@@ -38,6 +38,10 @@ class bond:
           user.bonds[self.id] = self.copy()
           self.issued += 1
           return [True,""]
+    else:
+      user.bonds[self.id] = self.copy()
+      self.issued += 1
+      return [True,""]
     return [False,"due to insufficient funds!"]
   def getnextyieldpayment(self):
     day = 60*60*24
