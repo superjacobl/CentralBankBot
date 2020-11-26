@@ -375,9 +375,18 @@ def updatebonds(accounts):
     for item in accounts:
       item = accounts[item]
       total = 0
+      todelete = []
       for bond in item.bonds:
+        i = bond
         bond = item.bonds[bond]
-        total += bond.update()
+        a,didpayout = bond.update()
+        total += a
+        if didpayout:
+          todelete.append(i)
+      for i in item.bonds.copy():
+        if i in todelete:
+          print(f"deleted bond {i} from account {item.svid}")
+          del item.bonds[i]
       if not total == 0:
         svapi.sendtransaction(total,os.getenv("Issuer-SVID"),item.svid)
   except:

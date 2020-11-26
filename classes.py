@@ -64,12 +64,12 @@ class bond:
       svapi.sendtransaction(self.base,os.getenv("Issuer-SVID"),self.holdersvid)
       self.maturited = True
       self.issued -= 1
-      return self.base
+      return (self.base,True)
     if self.lastupdated+(hour) <= time.time() or force:
         amountpaid += self.base*(self.interest/30/24)
         self.lastupdated = time.time()
         self.paid_out += self.base*(self.interest/30/24)
-    return amountpaid
+    return (amountpaid,False)
 class account:
     def __init__(self):
         self.loans = []
